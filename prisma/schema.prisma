@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int       @id @default(autoincrement())
+  name             String
+  phone            String
+  email            String    @unique
+  password         String
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  userType         UserType  @map("user_type")
+  homes            Home[]
+  buyer_messages   Message[] @relation("buyer_messages")
+  realtor_messages Message[] @relation("realtor_messages")
+}
+
+enum UserType {
+  BUYER
+  REALTOR
+  ADMIN
+}
+
+model Home {
+  id                Int          @id @default(autoincrement())
+  address           String
+  city              String
+  numberOfBedrooms  Int          @map("number_of_bedrooms")
+  numberOfBathrooms Float        @map("number_of_bathrooms")
+  listedDate        DateTime     @default(now()) @map("listed_date")
+  price             Float
+  landSize          Float        @map("land_size")
+  propertyType      PropertyType @map("property_type")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+  realtorId         Int          @map("realtor_id")
+  realtor           User         @relation(fields: [realtorId], references: [id])
+  images            Image[]
+  messages          Message[]
+}
+
+enum PropertyType {
+  RESIDENTIAL
+  CONDO
+}
+
+model Image {
+  id        Int      @id @default(autoincrement())
+  url       String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  homeId    Int      @map("home_id")
+  home      Home     @relation(fields: [homeId], references: [id])
+}
+
+model Message {
+  id        Int    @id @default(autoincrement())
+  message   String
+  homeId    Int    @map("home_id")
+  home      Home   @relation(fields: [homeId], references: [id])
+  realtorId Int    @map("realtor_id")
+  realtor   User   @relation("realtor_messages", fields: [realtorId], references: [id])
+  buyerId   Int    @map("buyer_id")
+  buyer     User   @relation("buyer_messages", fields: [buyerId], references: [id])
+}
